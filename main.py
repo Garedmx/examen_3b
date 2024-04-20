@@ -23,8 +23,8 @@ class StarData(BaseModel):
 def index():
     steps= {
         "Paso 1": "Para iniciar el Scraping ingrese a la URL http://127.0.0.1:8000/stars?max=10",
-        "Paso 2": "Para modificar un dato, proporcione una consulta POST a la URL http://127.0.0.1:8000/star_mod/<IAU Name> y en formanto JSON los datos a Modificar",
-        "Paso 3": "Para almacenar la informacion en Azure Blob Storage ingrese a la URL http://127.0.0.1:8000/stars_save"
+        "Paso 2": "Para modificar un dato, proporcione una consulta POST a la URL http://127.0.0.1:8000/star_mod y en formanto JSON los datos a Modificar",
+        "Paso 3": "Para almacenar la informacion en Azure Blob Storage ingrese a la URL http://127.0.0.1:8000/star_upload"
     }
         
     return {f"Hola Mundo": "Este es un sistema desarrollado como ejercicio para 3B por el puesto de Backend Developer", "Instrucciones": steps}
