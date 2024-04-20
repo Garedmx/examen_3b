@@ -1,15 +1,18 @@
 from bs4 import BeautifulSoup
 from datetime import datetime
+from dotenv import load_dotenv
+from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient
 import requests
 import json
 import os
+
 
 class Scrape:
     def __init__(self):
         self.url = 'https://iau.org/public/themes/naming_stars/'
         self.json_data = []
 
-    def scrape_stars_list(self):
+    def scrape_stars_list(self, max):
         response = requests.get(self.url)
 
         # Validamos una respuesta success
@@ -41,7 +44,7 @@ class Scrape:
                     transformed_columns.append(column)
 
                 # Iterar sobre las filas de la tabla (excepto la primera que contiene los títulos de las columnas)
-                for row in table.find_all('tr')[1:]:
+                for row in table.find_all('tr')[1:max +1]:
                     # Obtener las celdas de la fila
                     cells = row.find_all('td')
                     # Crear un diccionario para almacenar la información de la fila
@@ -139,3 +142,61 @@ class Scrape:
         # Escribir el registro de cambio en el archivo de registro
         with open(log_file, "a") as f:
             f.write(f"{file_path} | {change_time} | {old_data} | {new_data}\n")
+
+    def scrape_stars_upload(self):
+        load_dotenv()
+        star_data_dicts = {
+            "storage_name" : os.getenv("STORAGE_NAME")
+        }
+
+        folder_path = "data"
+        file_list = os.listdir(folder_path)
+
+        # Ordenar los archivos por fecha de modificación (el último archivo será el último de la lista)
+        file_list.sort(key=lambda x: os.path.getmtime(os.path.join(folder_path, x)), reverse=True)
+
+        # Obtener la ruta del último archivo de la lista
+        latest_file_path = os.path.join(folder_path, file_list[0])
+
+        #limpiamos el nombre del contenedor
+        container_name =  file_list[0].replace('_', '')
+        container_name =  container_name.replace('/', '')
+        container_name = container_name.split('.')[0].strip()
+
+
+        # Obtenemos la cadena de coneccion a Azure del archivo .env
+        connection_string = os.getenv("CADENA")
+
+        # Conectamos con el servicio de Azure
+        blob_service_client = BlobServiceClient.from_connection_string(connection_string)
+
+        # Verificamos la existencia del contenedor en caso contrario lo creamos dentro de Azure Blob Storage
+        container_client = blob_service_client.get_container_client(container_name)
+        if not container_client.exists():
+            container_client.create_container()
+        star_data_dicts["container_name"] = container_name
+
+        #Abrimos el archivo JSON para cargarlo como variable
+        with open(latest_file_path, "r") as json_file:
+            stars_data = json.load(json_file)
+
+        files_storage = []
+        # Iteramos cada uno de los registros del ultimo archivo JSON
+        for star in stars_data:
+            blob_name = star["IAU_Name"]
+            blob_name_file = blob_name + '.json'
+            # Crear un nuevo archivo JSON para cada estrella
+            with open(blob_name_file, "w") as blob_json_file:
+                json.dump(star, blob_json_file)
+
+            # Cargar el archivo JSON en Azure Blob Storage
+            blob_client = container_client.get_blob_client(blob_name_file)
+            files_storage.append(blob_name_file)
+            with open(blob_name_file, "rb") as data:
+                blob_client.upload_blob(data)
+            # Eliminar el archivo JSON local después de cargarlo en Azure Blob Storage
+            os.remove(blob_name_file)
+
+        star_data_dicts["files"] = files_storage
+        star_data_json = json.dumps(star_data_dicts)
+        return {"status": "success", "message": "Datos cargados a Azure Blob Storage", "data": star_data_json}
