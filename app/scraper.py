@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
-from datetime import datetime
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
-from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient
+from azure.storage.blob import BlobServiceClient, PublicAccess, AccessPolicy, ContainerSasPermissions
 import requests
 import json
 import os
@@ -174,7 +174,19 @@ class Scrape:
         container_client = blob_service_client.get_container_client(container_name)
         if not container_client.exists():
             container_client.create_container()
+            metadata = {'type': 'test'}
+            container_client.set_container_metadata(metadata=metadata)
+            access_policy = AccessPolicy(permission=ContainerSasPermissions(read=True), expiry=datetime.utcnow() + timedelta(days=7), start=datetime.utcnow() - timedelta(minutes=5))
+            identifiers = {'test': access_policy}
+
+            # Establecer el nivel de acceso público del contenedor como "blob"
+            container_client.set_container_access_policy(signed_identifiers= identifiers, public_access=PublicAccess.CONTAINER)
+
+        # Obtener la URL de acceso público del contenedor
+        container_url = f"https://{blob_service_client.account_name}.blob.core.windows.net/{container_name}"
+
         star_data_dicts["container_name"] = container_name
+        star_data_dicts["container_url"] = container_url
 
         #Abrimos el archivo JSON para cargarlo como variable
         with open(latest_file_path, "r") as json_file:

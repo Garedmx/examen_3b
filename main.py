@@ -1,7 +1,7 @@
-from fastapi import FastAPI, Query, HTTPException
+from fastapi import FastAPI, Query
 from app.scraper import Scrape
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional, List, Dict
 import json
 
 app = FastAPI()
@@ -17,7 +17,7 @@ class StarData(BaseModel):
     RA: Optional[str]
     Dec: Optional[str]
     Approval_Date: Optional[str]
- 
+
 
 @app.get("/")
 def index():
@@ -42,11 +42,9 @@ def get_stars(max: int = Query(None, description="Número máximo de estrellas a
 
 
 @app.post("/star_mod")
-def update_star_data(star_data_list: List[StarData]):
-    # Convertir el objeto Pydantic a una lista de diccionarios
-    star_data_dicts = [star_data.dict() for star_data in star_data_list]
+def update_star_data(star_data_list: List[Dict[str, Optional[str]]]):
     new_scrape = Scrape()
-    stars_list = new_scrape.scrape_modif_data(star_data_dicts)
+    stars_list = new_scrape.scrape_modif_data(star_data_list)
 
     if stars_list["status"] == "success":
         return {"status": "success", "message": stars_list["message"], "data": json.loads(stars_list["data"])}

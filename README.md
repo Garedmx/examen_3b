@@ -1,21 +1,21 @@
 # Proyecto Examen_3B
 
-Este proyecto es una aplicación web desarrollada con FastAPI que realiza web scraping a la página https://iau.org/public/themes/naming_stars/ para obtener una lista de algunas estrellas y sus caracteristicas y proporcionarla a través de un endpoint. 
+Este proyecto es una aplicación web desarrollada con FastAPI que realiza web scraping a la página `https://iau.org/public/themes/naming_stars/` para obtener una lista de algunas estrellas y sus caracteristicas y proporcionarla a través de un endpoint. 
 
 También incluye funcionalidades para guardar esta lista en un archivo JSON, para realizar actualizaciones en un archivo JSON existente mediante un endpoint POST y para guardar los archivos JSON individuales en un Contenedor de Azure Blob Storage.
 
 ## Requisitos
 
-- Docker
-- Python 3.x
+- Docker (Linux) o Docker Desktop (Windows y Mac) `https://www.docker.com/products/docker-desktop/`
+- Python 3.9
 - pip
 
 ## Instalación y Uso
 
-1. Clona este repositorio en tu máquina local o Descomprimir el archivo .ZIP:
-2. Navega al Directorio Raiz:
-4. Ejecuta docker-compose para incializar los contenedores docker con: ´docker-compose up´
-5. Accede a la aplicacion en tu navegador web: http://localhost:8000/
+1. Clona este repositorio desde GitHub `https://github.com/Garedmx/examen_3b` o Descomprimir el archivo .ZIP en tu máquina local.
+2. Navega al Directorio Raiz.
+4. Ejecuta docker-compose para incializar los contenedores docker con: `docker-compose up -d`
+5. Accede a la aplicacion en tu navegador web: `http://localhost:8000/`
 
 ## Endpoints
 
@@ -25,17 +25,25 @@ También incluye funcionalidades para guardar esta lista en un archivo JSON, par
 
 - POST `/star_mod`: Permite actualizar los atributos de un Pokémon existente o agregar uno nuevo.
 
-- GET `/star_upload`: Almacena de manera individual en formato JSON dentro de un Contenedor la informacion de las estrellas consultadas.
+- GET `/star_upload`: Almacena de manera individual en formato JSON dentro de un Contenedor Cloud la informacion de las estrellas consultadas y regresa los parametros de acceso cloud para poder visualziar la información.
 
 ## Variables de Entorno
 
 Asegúrate de configurar las siguientes variables de entorno en un archivo `.env` en el directorio raíz del proyecto:
 
 - `STORAGE_NAME`: Nombre del contenedor en Azure Blob Storage.
+Este dato puede ser obtenido desde la seccion de claves de acceso de su Storage > Contenedor en Amazon Blob Storage
 
 ## Ejecutar Pruebas
-
-Para hacer uso del sistema puede usar herramientas que le permitan consumir API's como postman o Thunder Client, en caso de no contar con alguno de ellos, el sistema cuenta con su propia interface de consulta de API en la ruta: http://localhost:8000/docs#
+### Pruebas Unitarias
+Para ejecutar las pruebas unitarias es necesario entrar al shell del contenedor y posteriormente ejecutar las pruebas con pythes, todo esto se puede ejecutar desde la misma terminal donde inicializo el proyecto con los siguientes comandos:
+`docker exec -it examen_3b-app-1 /bin/bash`
+`pytest`
+para salir del shell del contenedor de docker puede usar el comando `exit`
+### Pruebas de Funcionalidad
+Para hacer uso del sistema puede usar herramientas que le permitan consumir API's como postman o Thunder Client, en caso de no contar con alguno de ellos, el sistema cuenta con su propia interface de consulta de API en la ruta: `http://localhost:8000/docs#`
+### Finalizar proyecto
+Si decea terminar el poryecto puede hacerlo terminando los contenedores desde el hambiente grafico de Docker Desctop o ejecutando el comando `docker-compose down`
 
 ## Sección 4
 
